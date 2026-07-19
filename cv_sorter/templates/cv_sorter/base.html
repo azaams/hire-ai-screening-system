@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HireAI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg:            #000000;
+      --surface:       #0a0a0a;
+      --card:          #0a0a0a;
+      --border:        #222222;
+      --border-h:      #333333;
+      --accent:        #ffffff;
+      --accent-fg:     #000000;
+      --success:       #10b981;
+      --success-bg:    rgba(16,185,129,0.1);
+      --warning:       #f59e0b;
+      --warning-bg:    rgba(245,158,11,0.1);
+      --danger:        #ef4444;
+      --danger-bg:     rgba(239,68,68,0.1);
+      --info:          #3b82f6;
+      --text:          #ededed;
+      --muted:         #888888;
+      --subtle:        #444444;
+      --fd: 'Space Grotesk', sans-serif;
+      --fb: 'Inter', sans-serif;
+      --fm: 'JetBrains Mono', monospace;
+      --r1: 4px; --r2: 6px; --r3: 8px; --r4: 12px;
+      --t: all 0.2s ease;
+    }
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--fb);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    h1,h2,h3,h4,h5,h6 { font-family: var(--fd); letter-spacing: -0.02em; line-height: 1.2; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 99px; }
+    ::selection { background: var(--accent); color: var(--accent-fg); }
+
+    /* NAV */
+    .nav {
+      position: sticky; top: 0; left: 0; right: 0; z-index: 100;
+      height: auto; min-height: 58px; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; flex-wrap: wrap; gap: 12px;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--fd); font-size: 16px; font-weight: 700;
+      letter-spacing: -0.03em; color: var(--text); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; transition: var(--t);
+    }
+    .nav-logo:hover { opacity: 0.75; }
+    .nav-logo .pip {
+      width: 8px; height: 8px; background: var(--accent);
+    }
+    .nav-right { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      text-decoration: none; padding: 5px 12px; border-radius: var(--r2);
+      transition: var(--t);
+    }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-btn {
+      font-size: 12px; font-weight: 500; font-family: var(--fb);
+      color: var(--muted); background: transparent;
+      border: 1px solid var(--border); padding: 5px 14px;
+      border-radius: var(--r2); cursor: pointer; transition: var(--t);
+      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      margin-left: 6px;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--border-h); }
+    .nav-btn.logout:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(239,68,68,0.3); }
+
+    /* SHELL */
+    .shell { position: relative; z-index: 1; min-height: calc(100vh - 58px); }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+    /* CARD */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r3); transition: var(--t);
+    }
+    .card.interactive:hover { border-color: var(--border-h); }
+
+    /* BUTTON */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+      font-family: var(--fb); font-weight: 500; font-size: 13px;
+      padding: 8px 18px; border-radius: var(--r2);
+      border: 1px solid transparent; cursor: pointer;
+      transition: var(--t); text-decoration: none; white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent); color: var(--accent-fg);
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: var(--border-h); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }
+    .btn-sm { font-size: 12px; padding: 6px 14px; }
+    .btn-xs { font-size: 11px; padding: 4px 10px; }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 10px; font-weight: 600; font-family: var(--fm);
+      text-transform: uppercase; padding: 4px 8px; border-radius: var(--r1); border: 1px solid;
+    }
+    .badge-success { background: transparent; color: var(--success); border-color: rgba(16,185,129,0.3); }
+    .badge-warning { background: transparent; color: var(--warning); border-color: rgba(245,158,11,0.3); }
+    .badge-danger  { background: transparent; color: var(--danger);  border-color: rgba(239,68,68,0.3); }
+    .badge-info    { background: transparent; color: var(--info);    border-color: rgba(59,130,246,0.3); }
+    .badge-neutral { background: rgba(255,255,255,.05); color: var(--muted); border-color: var(--border); }
+
+    /* FORM */
+    .label {
+      font-size: 12px; font-weight: 500; font-family: var(--fb);
+      color: var(--muted); display: block; margin-bottom: 8px;
+    }
+    .input, .select {
+      width: 100%; background: transparent;
+      border: 1px solid var(--border); border-radius: var(--r2);
+      color: var(--text); font-family: var(--fb); font-size: 14px;
+      padding: 10px 14px; transition: var(--t); outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    .input:focus, .select:focus {
+      border-color: var(--accent);
+    }
+    .input::placeholder { color: var(--subtle); }
+    .select option { background: var(--bg); color: var(--text); }
+
+    /* TABLE */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th {
+      font-size: 11px; font-weight: 500; font-family: var(--fb);
+      color: var(--muted); padding: 14px 16px; text-align: left;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .table td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 14px; }
+    .table tbody tr { transition: background 0.15s; }
+    .table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .table tbody tr:last-child td { border-bottom: none; }
+
+    /* MISC */
+    .section-label { font-size: 12px; font-weight: 500; font-family: var(--fb); color: var(--muted); }
+    .mono { font-family: var(--fm); }
+    .divider { height: 1px; background: var(--border); }
+
+    /* ALERT */
+    .alert { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--r2); font-size: 13px; font-weight: 500; border: 1px solid; }
+    .alert-success { background: var(--success-bg); color: var(--success); border-color: rgba(16,185,129,0.3); }
+    .alert-error   { background: var(--danger-bg);  color: var(--danger);  border-color: rgba(239,68,68,0.3); }
+    .alert-warning { background: var(--warning-bg); color: var(--warning); border-color: rgba(245,158,11,0.3); }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--r3); padding: 32px; max-width: 420px; width: 90%;
+      animation: modal-in 0.2s var(--t) both;
+    }
+    @keyframes modal-in { from { opacity:0; transform: scale(0.98) translateY(4px); } to { opacity:1; transform: none; } }
+
+    /* TOAST */
+    #toast-root { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; border-radius: var(--r2); background: var(--bg);
+      font-size: 13px; font-weight: 500; border: 1px solid;
+      animation: toast-in 0.2s var(--t) both;
+      min-width: 240px; max-width: 340px;
+    }
+    .toast-success { color: var(--text); border-color: var(--success); }
+    .toast-error   { color: var(--text); border-color: var(--danger); }
+    @keyframes toast-in { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: none; } }
+
+    /* PAGE FADE-IN */
+    .shell { animation: fadein 0.3s ease both; }
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="nav">
+    <a href="{% url 'upload_cv' %}" class="nav-logo">
+      <span class="pip"></span>
+      HIRE<span style="color:var(--muted)">.</span>AI
+    </a>
+    {% if user.is_authenticated %}
+    <div class="nav-right">
+      <a href="{% url 'upload_cv' %}" class="nav-link">Upload CV</a>
+      <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="nav-btn logout">Logout</button>
+      </form>
+    </div>
+    {% endif %}
+  </nav>
+
+  <div class="shell">
+    {% block content %}{% endblock %}
+  </div>
+
+  <div id="toast-root"></div>
+
+  <script>
+    function showToast(msg, type='success') {
+      const root = document.getElementById('toast-root');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.innerHTML = `<span>${msg}</span>`;
+      root.appendChild(t);
+      setTimeout(() => { t.style.transition='all .2s'; t.style.opacity='0'; t.style.transform='translateY(10px)'; setTimeout(()=>t.remove(),200); }, 3000);
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

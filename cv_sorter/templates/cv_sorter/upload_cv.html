@@ -1,0 +1,187 @@
+{% extends "cv_sorter/base.html" %}
+{% block title %}Upload & Analisis CV{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sc-score { font-family: var(--fm); font-size: 16px; font-weight: 600; }
+  .sc-high  { color: var(--success); }
+  .sc-mid   { color: var(--warning); }
+  .sc-low   { color: var(--danger);  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:36px; padding-bottom:60px;">
+
+  <div style="text-align:center; margin-bottom:40px;">
+    <p class="section-label" style="margin-bottom:8px;">AI-Powered Screening</p>
+    <h1 style="font-size:28px; font-weight:700; color:var(--text); margin-bottom:10px;">Analisis Dokumen CV</h1>
+    <p style="font-size:14px; color:var(--muted); max-width:480px; margin:0 auto; line-height:1.6;">
+      Upload dokumen kandidat secara massal. AI akan menilai kecocokan setiap CV terhadap deskripsi pekerjaan secara otomatis.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-6 items-start">
+
+    <!-- Upload Form -->
+    <div class="card" style="padding:28px; position:sticky; top:80px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border);">
+        <div style="width:36px;height:36px;border-radius:6px;background:transparent;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        </div>
+        <div>
+          <p style="font-family:var(--fd);font-size:15px;font-weight:600;color:var(--text);">Upload Form</p>
+          <p style="font-size:11px;color:var(--muted);">PDF · DOCX · TXT</p>
+        </div>
+      </div>
+
+      {% if messages %}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            {% if message.tags == 'error' %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            {% else %}<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>{% endif %}
+          </svg>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form id="uploadForm" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:18px;">
+        {% csrf_token %}
+        <div>
+          <label class="label" for="job_description">Posisi Pekerjaan</label>
+          <select id="job_description" name="job_description" class="select" required>
+            <option disabled selected value="">— Pilih Posisi —</option>
+            {% for jd in job_descriptions %}
+            <option value="{{ jd.id }}">{{ jd.posisi }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="cv_files">File CV</label>
+          <div id="dropzone" style="border:2px dashed var(--border);border-radius:var(--r3);padding:28px 20px;text-align:center;cursor:pointer;transition:var(--t);"
+            onclick="document.getElementById('cv_files').click()"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-bg)';"
+            ondragleave="this.style.borderColor='var(--border)';this.style.background='';"
+            ondrop="handleDrop(event)">
+            <svg width="28" height="28" fill="none" stroke="var(--muted)" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <p id="dropLabel" style="font-size:13px;color:var(--muted);font-weight:500;">Klik atau drag & drop file di sini</p>
+            <p style="font-size:11px;color:var(--subtle);margin-top:4px;">Multi-file didukung</p>
+          </div>
+          <input type="file" id="cv_files" name="cv_files" accept=".pdf,.doc,.docx,.txt" multiple required style="display:none;">
+        </div>
+        <button id="submitBtn" type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;">
+          <span id="btnText">Proses Analisis</span>
+          <span id="btnSpinner" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite;"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".25"/><path d="M21 12a9 9 0 00-9-9"/></svg>
+            Memproses...
+          </span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Results -->
+    <div class="card" style="padding:28px; min-height:500px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+        <p style="font-family:var(--fd);font-size:15px;font-weight:600;color:var(--text);">Hasil Analisis Terkini</p>
+        {% if grouped_results %}
+        <span class="badge badge-neutral">{{ grouped_results|length }} Posisi</span>
+        {% endif %}
+      </div>
+
+      {% if grouped_results %}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {% for posisi, list in grouped_results.items %}
+        <div style="border:1px solid var(--border);border-radius:var(--r3);overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:rgba(255,255,255,0.02);">
+            <p style="font-size:13px;font-weight:600;color:var(--text);">{{ posisi }}</p>
+            <span class="badge badge-neutral">{{ list|length }}</span>
+          </div>
+          <div>
+            {% for result in list %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid var(--border);transition:var(--t);"
+              onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+              <div>
+                <a href="{% url 'hasil_detail' result.id %}" style="font-size:13px;font-weight:600;color:var(--text);text-decoration:none;transition:var(--t);"
+                  onmouseover="this.style.color='var(--accent-l)'" onmouseout="this.style.color='var(--text)'">
+                  {{ result.pelamar.nama_lengkap }}
+                </a>
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  {{ result.putusan_akhir }}
+                </p>
+              </div>
+              <div style="text-align:right;display:flex;align-items:center;gap:12px;">
+                <span class="mono sc-score {% if result.skor_kecocokan >= 80 %}sc-high{% elif result.skor_kecocokan >= 50 %}sc-mid{% else %}sc-low{% endif %}">
+                  {{ result.skor_kecocokan }}%
+                </span>
+                <a href="{% url 'hasil_detail' result.id %}" class="btn btn-ghost btn-xs">Detail</a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:350px;text-align:center;">
+        <div style="width:56px;height:56px;border-radius:12px;background:transparent;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75a2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+        </div>
+        <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">Belum ada hasil analisis</p>
+        <p style="font-size:12px;color:var(--muted);">Pilih posisi dan upload CV untuk memulai</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Processing Modal -->
+<div id="procModal" class="modal-backdrop">
+  <div class="modal-box" style="text-align:center; padding:40px;">
+    <div style="width:52px;height:52px;border-radius:12px;background:transparent;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .9s linear infinite;"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".25"/><path d="M21 12a9 9 0 00-9-9"/></svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Memproses Dokumen</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">AI sedang membaca dan mengevaluasi setiap CV.<br>Mohon tunggu, proses ini memerlukan beberapa menit.</p>
+  </div>
+</div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fileInput = document.getElementById('cv_files');
+const dropLabel = document.getElementById('dropLabel');
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) dropLabel.textContent = `${fileInput.files.length} file dipilih`;
+});
+
+function handleDrop(e) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  dz.style.borderColor = 'var(--border)';
+  dz.style.background = '';
+  const dt = e.dataTransfer;
+  fileInput.files = dt.files;
+  if (dt.files.length) dropLabel.textContent = `${dt.files.length} file dipilih`;
+}
+
+document.getElementById('uploadForm').addEventListener('submit', function() {
+  const job = document.getElementById('job_description').value;
+  const files = fileInput.files.length;
+  if (job && files > 0) {
+    document.getElementById('btnText').style.display = 'none';
+    document.getElementById('btnSpinner').style.display = 'inline-flex';
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('procModal').classList.add('open');
+  }
+});
+</script>
+{% endblock %}
