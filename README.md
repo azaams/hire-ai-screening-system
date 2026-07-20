@@ -4,6 +4,22 @@ A Django web application that automates the CV screening and candidate ranking p
 
 ---
 
+## 📸 Application Previews
+
+| Login Page | Main Dashboard |
+| :---: | :---: |
+| ![Login Page](./screenshots/login.png) | ![Main Dashboard](./screenshots/dashboard.png) |
+
+| Batch Upload | Candidate Analysis (Summary) |
+| :---: | :---: |
+| ![Batch Upload](./screenshots/upload.png) | ![Candidate Analysis](./screenshots/hasil_1.png) |
+
+| Detailed Evaluation & Interview Questions | Django Admin |
+| :---: | :---: |
+| ![Detailed Evaluation](./screenshots/hasil_2.png) | ![Django Admin](./screenshots/admin.png) |
+
+---
+
 ## Features
 
 - **Bulk CV upload** — process multiple PDF, DOCX, or TXT files in a single submission
